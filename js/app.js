@@ -12,7 +12,8 @@ function createDefaultProfile(pid, name, grade, icon, bday) {
         equippedId: "amao_base",
         lv: 3,
         affection: 3,
-        unlockedIds: ["amao_base", "amao_pk_mushroom", "amao_hw_pumpkin", "amao_ur_meme67"],
+        // 🔒 正式上線版：預設僅解鎖 No.001 原始阿毛，其餘皆由孩子自己抽卡收集！
+        unlockedIds: ["amao_base"],
         answeredChatIds: [],
         dailyChatCount: 0,
         lastResetDate: "",
@@ -301,12 +302,14 @@ function renderHub() {
         const isSelected = item.id === s.equippedId;
         const unlocked = isCardUnlocked(item.id);
         return `
-            <div onclick="equipAMao('${item.id}')" class="cursor-pointer rounded-xl border-2 border-[#3e2723] p-1.5 text-center transition ${isSelected ? 'bg-[#fde68a] ring-2 ring-orange-500' : 'bg-[#fffdf7] hover:bg-amber-50'}">
+            <div onclick="${unlocked ? `equipAMao('${item.id}')` : `switchTab('packs')`}" 
+                 title="${unlocked ? '點擊換裝' : '尚未解鎖，快去抽卡包收集！'}"
+                 class="cursor-pointer rounded-xl border-2 border-[#3e2723] p-1.5 text-center transition ${isSelected ? 'bg-[#fde68a] ring-2 ring-orange-500' : 'bg-[#fffdf7] hover:bg-amber-50'}">
                 <div class="text-[10px] font-black text-gray-500">${item.cardNo} (${item.rarity})</div>
                 <div class="w-14 h-14 mx-auto">${renderAMaoSVG(item.decorType, !unlocked)}</div>
-                <div class="text-[11px] font-black truncate mt-0.5">${unlocked ? item.name : '？？？'}</div>
+                <div class="text-[11px] font-black truncate mt-0.5">${unlocked ? item.name : '🔒 ？？？'}</div>
             </div>
-                `;
+        `;
     }).join('');
 
     renderDialogueBubble();
@@ -430,47 +433,102 @@ function claimQuest(qId) {
 }
 
 function renderCardPacksView() {
-    const coverItem = DECOR_DEX.find(d => d.id === "amao_ur_meme67") || DECOR_DEX[0];
-    document.getElementById('pack-visual-icon').innerHTML = renderAMaoSVG(coverItem.decorType, false);
+    // 1. 卡包封面夥伴：預設為原始阿毛（若已解鎖 UR 則顯示 UR 阿毛）
+    const hasUR = isCardUnlocked("amao_ur_meme67");
+    const coverItem = DECOR_DEX.find(d => d.id === (hasUR ? "amao_ur_meme67" : "amao_base")) || DECOR_DEX[0];
 
-    const rarityStyle = {
-        "UR":  { badge: "bg-gradient-to-r from-rose-400 via-amber-300 to-cyan-300 text-[#3e2723]", bar: "bg-rose-500", order: 0 },
-        "SSR": { badge: "bg-amber-400 text-[#3e2723]", bar: "bg-amber-400", order: 1 },
-        "SR":  { badge: "bg-sky-300 text-[#3e2723]",   bar: "bg-sky-400",   order: 2 },
-        "R":   { badge: "bg-orange-200 text-[#3e2723]", bar: "bg-orange-400", order: 3 },
-        "N":   { badge: "bg-stone-200 text-[#3e2723]",  bar: "bg-stone-500",  order: 4 }
+    // 2. 在背景注入「紅色 6」與「藍色 7」大字塗鴉
+    document.getElementById('pack-visual-icon').innerHTML = `
+        <div class="relative w-full h-full flex items-center justify-center overflow-hidden">
+            <!-- 背景塗鴉：左側紅色 6、右側藍色 7 -->
+            <div class="absolute inset-0 pointer-events-none select-none flex justify-between items-center px-2">
+                <!-- 紅色 6 -->
+                <span class="text-6xl font-black text-[#ff0055] opacity-35 -rotate-12 translate-y-2 drop-shadow-sm" 
+                      style="font-family: 'Zen Maru Gothic', cursive;">
+                    6
+                </span>
+                <!-- 藍色 7 -->
+                <span class="text-6xl font-black text-[#3b86ff] opacity-35 rotate-12 -translate-y-1 drop-shadow-sm" 
+                      style="font-family: 'Zen Maru Gothic', cursive;">
+                    7
+                </span>
+            </div>
+
+            <!-- 前景阿毛插畫 -->
+            <div class="relative z-10 w-full h-full">
+                ${renderAMaoSVG(coverItem.decorType, false)}
+            </div>
+        </div>
+    `;
+
+    const s = getState();
+    const tierOrder = ["UR", "SSR", "SR", "R", "N"];
+    const rarityTheme = {
+        "UR":  { 
+            bg: "bg-gradient-to-r from-rose-100 via-amber-100 to-cyan-100", 
+            badge: "bg-gradient-to-r from-rose-400 via-amber-300 to-cyan-300 text-[#3e2723]", 
+            bar: "bg-gradient-to-r from-rose-500 via-amber-400 to-cyan-500" 
+        },
+        "SSR": { 
+            bg: "bg-[#fffbeb]", 
+            badge: "bg-amber-400 text-[#3e2723]", 
+            bar: "bg-amber-400" 
+        },
+        "SR":  { 
+            bg: "bg-[#f0f9ff]", 
+            badge: "bg-sky-300 text-[#3e2723]",   
+            bar: "bg-sky-400" 
+        },
+        "R":   { 
+            bg: "bg-[#fff7ed]", 
+            badge: "bg-orange-200 text-[#3e2723]", 
+            bar: "bg-orange-400" 
+        },
+        "N":   { 
+            bg: "bg-[#fafaf9]", 
+            badge: "bg-stone-200 text-[#3e2723]",  
+            bar: "bg-stone-500" 
+        }
     };
 
-    const sortedDex = [...DECOR_DEX].sort((a, b) => {
-        if (rarityStyle[a.rarity].order !== rarityStyle[b.rarity].order) {
-            return rarityStyle[a.rarity].order - rarityStyle[b.rarity].order;
-        }
-        return a.slotNo - b.slotNo;
-    });
+    // 這裡直接輸出 5 個單純的橫幅，完全不再輸出重複的五格方塊
+    document.getElementById('pack-probability-list').innerHTML = tierOrder.map(rKey => {
+        const spec = PACK_TIER_SPEC[rKey];
+        const st = rarityTheme[rKey];
+        const unlockedInTier = DECOR_DEX.filter(d => d.rarity === rKey && s.unlockedIds.includes(d.id)).length;
 
-    document.getElementById('pack-probability-list').innerHTML = sortedDex.map(item => {
-        const st = rarityStyle[item.rarity];
-        const unlocked = isCardUnlocked(item.id);
-        const effRate = getCardEffectiveRate(item);
-        const tierInfo = PACK_TIER_SPEC[item.rarity];
         return `
-            <div class="p-2 rounded-xl border-2 border-[#3e2723] bg-[#fffdf5] flex items-center gap-3">
-                <div class="w-14 h-14 bg-[#f8eed9] rounded-lg border-2 border-[#3e2723] p-1 shrink-0">
-                    ${renderAMaoSVG(item.decorType, !unlocked)}
+            <div class="p-3 rounded-xl border-2 border-[#3e2723] ${st.bg} flex items-center gap-3 shadow-sm">
+                <div class="w-12 h-12 shrink-0 flex items-center justify-center">
+                    ${renderRarityRosetteSVG(rKey)}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between mb-1">
-                        <div class="flex items-center gap-1.5 truncate">
-                            <span class="text-[11px] font-black text-gray-500">${item.cardNo}</span>
-                            <span class="${st.badge} border border-[#3e2723] text-[10px] px-1.5 py-0.5 rounded font-black">${item.rarity}</span>
-                            <span class="font-black text-sm truncate">${unlocked ? item.name : '？？？未知阿毛'}</span>
-                            ${unlocked ? `<span class="text-[10px] bg-green-100 text-green-800 px-1.5 rounded border border-green-400 font-bold">已擁有</span>` : ''}
+                    <div class="flex flex-wrap items-center justify-between gap-1 mb-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="${st.badge} border border-[#3e2723] text-xs px-2 py-0.5 rounded-md font-black">
+                                ${rKey} 階級
+                            </span>
+                            <span class="font-black text-sm text-[#3e2723] truncate">
+                                ${spec.label}
+                            </span>
+                            <span class="text-[11px] bg-white/80 border border-[#3e2723] px-1.5 py-0.2 rounded font-bold text-stone-600">
+                                No.${spec.rangeStr} (共 ${spec.totalSlots} 張)
+                            </span>
                         </div>
-                        <span class="font-black text-xs text-orange-700 shrink-0">${effRate}% <span class="text-[10px] text-gray-500">(${item.rarity}階 ${tierInfo.tierRate}%)</span></span>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-[11px] font-bold text-stone-600 bg-white/70 px-1.5 py-0.5 rounded border border-stone-300">
+                                已收集 ${unlockedInTier}/${spec.totalSlots}
+                            </span>
+                            <span class="font-black text-sm text-orange-800">
+                                ${spec.tierRate}%
+                            </span>
+                        </div>
                     </div>
-                    <div class="text-[11px] text-gray-500 font-bold truncate mb-1">${item.series} — ${tierInfo.desc}</div>
-                    <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden border border-[#3e2723]">
-                        <div class="${st.bar} h-full" style="width: ${Math.min(100, effRate * 2.2)}%"></div>
+                    <p class="text-xs text-stone-600 font-bold mb-1.5">
+                        ${spec.desc}
+                    </p>
+                    <div class="w-full bg-white/90 h-2 rounded-full overflow-hidden border border-[#3e2723]">
+                        <div class="${st.bar} h-full" style="width: ${Math.max(4, spec.tierRate)}%"></div>
                     </div>
                 </div>
             </div>

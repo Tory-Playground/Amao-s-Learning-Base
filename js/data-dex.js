@@ -4,11 +4,11 @@
  * ============================================================================ */
 
 const PACK_TIER_SPEC = {
-    UR:  { rarity: "UR",  totalSlots: 1,  range: [67, 67], rangeStr: "067",     tierRate: 1.49,  label: "👑 UR 卡包主題迷因", desc: "左右手上下擺動 67 迷因阿毛" },
-    SSR: { rarity: "SSR", totalSlots: 3,  range: [64, 66], rangeStr: "064~066", tierRate: 4.48,  label: "🌟 SSR 超稀有裝扮", desc: "極稀有特殊裝扮與出遊大獎" },
-    SR:  { rarity: "SR",  totalSlots: 10, range: [54, 63], rangeStr: "054~063", tierRate: 14.93, label: "✨ SR 特殊與捷運出遊", desc: "特殊裝扮與假日捷運出遊系列" },
-    R:   { rarity: "R",   totalSlots: 23, range: [31, 53], rangeStr: "031~053", tierRate: 34.33, label: "⚔️ R 副本 Boss 系列", desc: "三大副本 Boss 與關卡守門員" },
-    N:   { rarity: "N",   totalSlots: 30, range: [1, 30],  rangeStr: "001~030", tierRate: 44.77, label: "📘 N 習作題目人物", desc: "No.001原始阿毛 & 爸媽/兄妹/小明等題目角色" }
+    UR:  { rarity: "UR",  totalSlots: 1,  range: [67, 67], rangeStr: "067",     tierRate: 1.49,  label: "👑 UR 壓軸傳說主題卡", desc: "全卡包僅 1 張的終極神秘大獎！擁有專屬動態特效的傳說級阿毛！" },
+    SSR: { rarity: "SSR", totalSlots: 3,  range: [64, 66], rangeStr: "064~066", tierRate: 4.48,  label: "🌟 SSR 超稀有傳奇裝扮", desc: "閃耀金色光芒的極稀有夢幻裝扮，等待幸運探險家來收集！" },
+    SR:  { rarity: "SR",  totalSlots: 10, range: [54, 63], rangeStr: "054~063", tierRate: 14.93, label: "✨ SR 特殊與捷運出遊", desc: "特殊造型裝扮與假日搭捷運出遊的驚喜主題卡！" },
+    R:   { rarity: "R",   totalSlots: 23, range: [31, 53], rangeStr: "031~053", tierRate: 34.33, label: "⚔️ R 副本 Boss 系列", desc: "鎮守各大數學與英文學習副本的守門員與魔王造型！" },
+    N:   { rarity: "N",   totalSlots: 30, range: [1, 30],  rangeStr: "001~030", tierRate: 44.77, label: "📘 N 習作題目人物", desc: "最貼近日常的初始阿毛與習作題目夥伴系列！" }
 };
 
 const DECOR_DEX = [
