@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>阿毛的秘密基地 - 手繪卡牌圖鑑與雙人學習冒險</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 載入外部模組化樣式表 -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-2 md:p-4">
+
+    <!-- Global SVG Filters for Hand-Drawn Crayon / Pencil Texture & Sticker Outline -->
+    <svg width="0" height="0" class="absolute pointer-events-none">
+        <defs>
+            <filter id="crayon-sketch" x="-10%" y="-10%" width="120%" height="120%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="3" result="noise" seed="3"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.9" xChannelSelector="R" yChannelSelector="G"/>
+            </filter>
+            <filter id="sticker-cutout" x="-20%" y="-20%" width="140%" height="140%">
+                <feMorphology in="SourceAlpha" operator="dilate" radius="4.5" result="dilated"/>
+                <feFlood flood-color="#ffffff" result="white-fill"/>
+                <feComposite in="white-fill" in2="dilated" operator="in" result="sticker-border"/>
+                <feDropShadow in="sticker-border" dx="1.5" dy="3.5" stdDeviation="2.2" flood-color="#3e2723" flood-opacity="0.32" result="sticker-shadow"/>
+                <feMerge>
+                    <feMergeNode in="sticker-shadow"/>
+                    <feMergeNode in="sticker-border"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+            <radialGradient id="plush-cream" cx="46%" cy="38%" r="58%">
+                <stop offset="0%" stop-color="#fff9db"/>
+                <stop offset="72%" stop-color="#f7e3a6"/>
+                <stop offset="100%" stop-color="#e5c87e"/>
+            </radialGradient>
+            <linearGradient id="ear-pink" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#ffb3c6"/>
+                <stop offset="100%" stop-color="#f2849e"/>
+            </linearGradient>
+            <linearGradient id="sr-holo" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#7bdff2"/>
+                <stop offset="50%" stop-color="#b2f7ef"/>
+                <stop offset="100%" stop-color="#f2b5d4"/>
+            </linearGradient>
+            <linearGradient id="ssr-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffe169"/>
+                <stop offset="50%" stop-color="#fad643"/>
+                <stop offset="100%" stop-color="#ddb771"/>
+            </linearGradient>
+            <linearGradient id="ur-rainbow" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ff6b6b"/>
+                <stop offset="25%" stop-color="#ffd166"/>
+                <stop offset="50%" stop-color="#06d6a0"/>
+                <stop offset="75%" stop-color="#4cc9f0"/>
+                <stop offset="100%" stop-color="#b5179e"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <!-- Main Container -->
+    <div class="w-full max-w-6xl fluffy-box flex flex-col min-h-[760px] relative">
+        
+        <!-- STICKY TOP HEADER & DESKTOP TABS -->
+        <div class="sticky top-0 z-30 rounded-t-[14px] overflow-hidden shadow-md">
+            <header class="bg-[#f6bd60] text-[#3e2723] border-b-4 border-[#3e2723] px-3 md:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-[#fff8dc] border-3 border-[#3e2723] flex items-center justify-center shadow-inner text-2xl shrink-0">
+                        🐰
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <h1 class="text-lg md:text-xl font-black tracking-wider">阿毛的毛茸茸秘密基地</h1>
+                            <button onclick="openModal('profile-modal')" id="active-player-pill" class="fluffy-btn bg-[#ff8fa3] hover:bg-[#ff758f] text-white text-xs px-2.5 py-0.5 rounded-full font-black flex items-center gap-1">
+                                <span>👧 小四探險家 (4年級)</span>
+                                <i class="fa-solid fa-caret-down"></i>
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-[#5c3d2e] font-bold mt-0.5">
+                            <span id="ui-today-date">📅 2026/10/25</span>
+                            <span id="ui-season-tag" class="bg-[#3e2723] text-[#fdf0b6] px-2 py-0.2 rounded-full text-[11px]">🎃 萬聖節搞怪季</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-1.5 md:gap-2">
+                    <div class="bg-[#fffdf5] px-2.5 py-1 rounded-xl border-3 border-[#3e2723] flex items-center gap-1 shadow-sm">
+                        <span class="text-base">🌰</span>
+                        <span class="text-xs font-bold text-gray-600 hidden sm:inline">橡實幣:</span>
+                        <span id="ui-coins" class="text-[#d97706] font-black text-base">650</span>
+                    </div>
+                    <div class="bg-[#fffdf5] px-2.5 py-1 rounded-xl border-3 border-[#3e2723] flex items-center gap-1 shadow-sm">
+                        <span class="text-base">🍮</span>
+                        <span class="text-xs font-bold text-gray-600 hidden sm:inline">布丁:</span>
+                        <span id="ui-puddings" class="text-[#e11d48] font-black text-base">5</span>
+                    </div>
+                    <button onclick="openCheckInModal()" class="fluffy-btn bg-[#80ed99] hover:bg-[#57cc99] text-[#3e2723] px-2.5 py-1 text-xs font-black relative">
+                        <i class="fa-solid fa-calendar-check mr-0.5"></i>簽到
+                        <span id="checkin-dot" class="w-2.5 h-2.5 bg-red-600 border border-white rounded-full absolute -top-1 -right-1 animate-ping"></span>
+                    </button>
+                    <button onclick="openTransferModal()" class="fluffy-btn bg-[#a8dadc] hover:bg-[#8ecae6] text-[#1d3557] px-2.5 py-1 text-xs font-black">
+                        💾 引繼碼
+                    </button>
+                    <button onclick="openModal('parent-modal')" class="fluffy-btn bg-[#3e2723] text-white px-2.5 py-1 text-xs font-bold hover:bg-[#5c3d2e]">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                </div>
+            </header>
+
+            <nav id="hub-nav" class="hidden md:flex bg-[#3e2723] border-b-4 border-[#3e2723] px-4 py-2 flex-wrap gap-2.5">
+                <button onclick="switchTab('center')" id="tab-center" class="fluffy-btn bg-[#f6bd60] text-[#3e2723] font-bold px-4 py-1.5 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-house-chimney"></i> 阿毛房間大廳
+                </button>
+                <button onclick="switchTab('dungeons')" id="tab-dungeons" class="fluffy-btn bg-[#fffdf5] text-[#3e2723] font-bold px-4 py-1.5 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-compass text-red-500"></i> 討伐與探險副本 <span class="grade-badge-inline bg-amber-200 text-[#3e2723] text-xs px-1.5 rounded border border-[#3e2723]">小四題庫</span>
+                </button>
+                <button onclick="switchTab('packs')" id="tab-packs" class="fluffy-btn bg-[#fffdf5] text-[#3e2723] font-bold px-4 py-1.5 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-box-open text-orange-500"></i> 【✨ 最初的 67】抽卡機 <span class="bg-orange-500 text-white text-xs px-1.5 rounded-full">67張配比</span>
+                </button>
+                <button onclick="switchTab('decordex')" id="tab-decordex" class="fluffy-btn bg-[#fffdf5] text-[#3e2723] font-bold px-4 py-1.5 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-swatchbook text-amber-600"></i> 手繪阿毛圖鑑卡冊 <span id="dex-count-badge" class="bg-[#ff8fa3] text-white text-xs px-2 rounded-full border border-[#3e2723]">4/67</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- BIRTHDAY SURPRISE BANNER -->
+        <div id="birthday-banner" class="hidden mx-4 mt-4 fluffy-box bg-gradient-to-r from-[#ffccd5] via-[#fff3b0] to-[#ffccd5] p-3.5 flex flex-wrap items-center justify-between gap-3 border-4 border-[#e11d48]">
+            <div class="flex items-center gap-3">
+                <div class="text-4xl animate-bounce">🎂</div>
+                <div>
+                    <h3 id="bday-banner-title" class="text-base md:text-lg font-black text-[#9f1239]">祝親愛的小主人 生日快樂！Yaha!! 🎉</h3>
+                    <p class="text-xs font-bold text-[#3e2723]">阿毛特別為你準備了「生日限定大禮包（🌰 500 橡實幣 ＋ 🍮 焦糖布丁 x3）」！</p>
+                </div>
+            </div>
+            <button onclick="claimBirthdayGift()" class="fluffy-btn bg-[#e11d48] hover:bg-[#be123c] text-white font-black px-4 py-2 text-xs shrink-0">
+                🎁 領取生日大禮包！
+            </button>
+        </div>
+
+        <!-- VIEW 1: A-MAO ROOM HUB -->
+        <main id="view-center" class="flex-1 cozy-floor p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 flex flex-col gap-4">
+                <div class="amao-illust-card p-5 flex-1 flex flex-col justify-between relative min-h-[410px]">
+                    <div class="flex flex-wrap justify-between items-start gap-2 z-10">
+                        <div class="bg-[#fdf8ee]/95 border-3 border-[#3e2723] px-3.5 py-2 rounded-xl shadow-sm">
+                            <div class="flex items-center gap-2">
+                                <span id="partner-card-no" class="bg-[#3e2723] text-[#fdf0b6] text-xs px-2 py-0.5 rounded font-black">No.001</span>
+                                <span id="partner-name" class="font-black text-lg text-[#3e2723]">原始阿毛</span>
+                                <span class="bg-[#f6bd60] border border-[#3e2723] text-xs px-2 py-0.5 rounded-full font-bold">Lv.<span id="partner-lv">3</span></span>
+                            </div>
+                            <div class="text-xs text-gray-600 mt-1 flex items-center gap-1 font-bold">
+                                飽足好感度: <span id="partner-hearts">❤️❤️❤️🤍🤍</span>
+                            </div>
+                        </div>
+                        <div id="partner-rosette" class="w-12 h-12 flex items-center justify-center"></div>
+                    </div>
+
+                    <div class="my-auto flex flex-col items-center justify-center relative py-1">
+                        <div class="fluffy-box bg-white/95 px-4 py-2.5 mb-2 text-center max-w-md w-full z-20">
+                            <div class="flex items-center justify-between text-xs font-bold mb-1 border-b border-amber-200 pb-1">
+                                <span id="amao-sound-tag" class="text-orange-600 truncate">🔊「嗚啦～呀哈！！」</span>
+                                <span id="chat-quota-badge" class="bg-emerald-100 text-emerald-800 border border-emerald-500 px-2 py-0.2 rounded-full text-[11px] shrink-0">今日有獎問答: 0/3</span>
+                            </div>
+                            <p id="bubble-en" class="font-bold text-[#1d3557] text-base"></p>
+                            <p id="bubble-zh" class="text-xs text-gray-500"></p>
+                            <div id="bubble-options" class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-dashed border-gray-300"></div>
+                        </div>
+
+                        <div onclick="nextDialogue()" class="cursor-pointer group relative flex items-center justify-center my-1" title="點我切換對話！">
+                            <div id="amao-main-svg" class="w-48 h-48 animate-amao z-10 flex items-center justify-center"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3 z-10">
+                        <button onclick="feedAMao()" class="fluffy-btn bg-[#ff8fa3] hover:bg-[#ff758f] text-white font-bold py-2.5 px-3 text-sm flex items-center justify-center gap-1.5">
+                            <span>🍮</span> 餵食布丁 (-1)
+                        </button>
+                        <button onclick="nextDialogue()" class="fluffy-btn bg-[#f6bd60] hover:bg-[#f4a261] text-[#3e2723] font-bold py-2.5 px-3 text-sm flex items-center justify-center gap-1.5">
+                            <span>💬</span> 換一句英文對話
+                        </button>
+                        <button onclick="switchTab('decordex')" class="fluffy-btn bg-[#a8dadc] hover:bg-[#8ecae6] text-[#1d3557] font-bold py-2.5 px-3 text-sm flex items-center justify-center gap-1.5">
+                            <span>🎃</span> 翻開圖鑑換裝
+                        </button>
+                    </div>
+                </div>
+
+                <div class="fluffy-box-dark p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-14 h-14 rounded-xl bg-orange-500/20 border-2 border-orange-400 flex items-center justify-center text-3xl">🎴</div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="bg-gradient-to-r from-pink-500 via-amber-400 to-cyan-400 text-[#3e2723] text-xs px-2 py-0.5 rounded font-black">UR 迷因主題卡包</span>
+                                <h3 class="text-[#f6bd60] font-bold text-base">【✨ 最初的 67】第一彈卡包熱賣中！</h3>
+                            </div>
+                            <p class="text-xs text-gray-300 mt-0.5">收錄 UR 迷因 67 阿毛 (No.067)、SSR/SR 特裝、R 副本 Boss 與 N 習作題目角色！</p>
+                        </div>
+                    </div>
+                    <button onclick="switchTab('packs')" class="fluffy-btn bg-[#f48c06] text-white font-bold px-5 py-2.5 text-sm shrink-0 hover:bg-orange-500">
+                        抽【最初的 67】▶
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5 flex flex-col gap-4">
+                <div class="fluffy-box p-4 bg-[#fdf8ee]">
+                    <div class="flex items-center justify-between border-b-2 border-[#3e2723] pb-1.5 mb-2.5">
+                        <h2 class="text-sm font-black flex items-center gap-1.5">
+                            <i class="fa-solid fa-sparkles text-amber-500"></i> 【✨ 最初的 67】主打焦點卡預覽 (點擊換裝)
+                        </h2>
+                        <button onclick="switchTab('decordex')" class="text-xs text-orange-700 font-bold underline">看 67 張編號區間 ▶</button>
+                    </div>
+                    <div id="hub-mini-cards" class="grid grid-cols-4 gap-2"></div>
+                </div>
+
+                <div class="fluffy-box p-4 flex-1 flex flex-col">
+                    <div class="flex items-center justify-between border-b-3 border-[#3e2723] pb-2 mb-3">
+                        <h2 class="text-base font-black flex items-center gap-2">
+                            <i class="fa-solid fa-scroll text-orange-600"></i> 阿毛的今日討伐任務板
+                        </h2>
+                        <span class="grade-badge-inline text-xs bg-[#d8f3dc] border-2 border-[#3e2723] px-2 py-0.5 rounded-full font-bold text-green-900">小四專屬</span>
+                    </div>
+                    <div id="quest-list" class="space-y-2.5 flex-1"></div>
+                </div>
+
+                <div class="fluffy-box p-3.5">
+                    <h2 class="text-sm font-black border-b-2 border-[#3e2723] pb-1 mb-2.5 flex items-center gap-2">
+                        <i class="fa-solid fa-award text-yellow-600"></i> 除草與討伐檢定證書
+                    </h2>
+                    <div class="grid grid-cols-3 gap-2 text-center" id="badge-list"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- VIEW 2: DUNGEON PORTAL -->
+        <main id="view-dungeons" class="hidden flex-1 cozy-floor p-6 flex flex-col gap-6">
+            <div>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-2xl font-black">🗺️ 選擇阿毛的討伐與除草副本</h2>
+                    <span class="grade-badge-inline bg-[#3e2723] text-[#fdf0b6] px-3 py-1 rounded-full text-xs font-black">目前題庫：4年級</span>
+                </div>
+                <p class="text-sm text-gray-600 font-bold mt-1">系統已自動根據當前登入的小主人年級（4年級 / 6年級）調整題目難度！</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
+                <div class="amao-illust-card flex flex-col justify-between p-5">
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-[#f6bd60] border-2 border-[#3e2723] px-2.5 py-0.5 rounded-full text-xs font-bold">5級除草檢定</span>
+                            <span id="dg1-sub-tag" class="text-xs font-bold text-blue-900 bg-blue-100 px-2 py-0.5 rounded border border-blue-400">小四數學：角度與量角器</span>
+                        </div>
+                        <div class="h-36 bg-[#fffdf7] rounded-xl border-3 border-[#3e2723] mb-4 flex items-center justify-center relative overflow-hidden">
+                            <div id="dungeon-preview-1" class="w-28 h-28 animate-amao"></div>
+                            <div class="absolute bottom-1.5 right-2.5 bg-[#3e2723] text-yellow-300 px-2 py-0.5 rounded text-xs font-bold">📐 旋轉除草雷射</div>
+                        </div>
+                        <h3 class="text-xl font-black mb-2">【阿毛的雷射除草機】</h3>
+                        <p class="text-sm text-gray-700 mb-4 leading-relaxed font-bold">
+                            花園裡長出奇怪的森林毒蘑菇了！幫阿毛轉動「量角器雷射砲台」到正確的角度，一發清除所有雜草！
+                        </p>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-800 mb-3 bg-amber-100/80 p-2.5 rounded-lg border-2 border-[#3e2723] font-bold">
+                            🎁 通關獎勵：<span class="text-amber-800">🌰 300 橡實幣</span> + <span class="text-rose-600">🍮 焦糖布丁 x2</span>
+                        </div>
+                        <button onclick="startDungeon('angles')" class="w-full fluffy-btn bg-[#f6bd60] hover:bg-amber-300 text-[#3e2723] font-black py-3 text-base">
+                            出發除草囉！Yaha ⚡
+                        </button>
+                    </div>
+                </div>
+
+                <div class="amao-illust-card flex flex-col justify-between p-5">
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-[#ff8fa3] text-white border-2 border-[#3e2723] px-2.5 py-0.5 rounded-full text-xs font-bold">暗黑料理大賽</span>
+                            <span id="dg2-sub-tag" class="text-xs font-bold text-purple-900 bg-purple-100 px-2 py-0.5 rounded border border-purple-400">小四數學：乘除與分配律</span>
+                        </div>
+                        <div class="h-36 bg-[#fffdf7] rounded-xl border-3 border-[#3e2723] mb-4 flex items-center justify-center relative overflow-hidden">
+                            <div id="dungeon-preview-2" class="w-28 h-28 animate-amao"></div>
+                            <div class="absolute bottom-1.5 right-2.5 bg-[#3e2723] text-pink-300 px-2 py-0.5 rounded text-xs font-bold">🧪 倍增料理合成</div>
+                        </div>
+                        <h3 class="text-xl font-black mb-2">【阿毛的暴走拉麵大釜】</h3>
+                        <p class="text-sm text-gray-700 mb-4 leading-relaxed font-bold">
+                            阿毛想煮出超大碗的巨無霸拉麵！選擇食材克數並搭配「倍增魔法卡 (×4, ×6, ×10)」，湊出剛好克數！
+                        </p>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-800 mb-3 bg-rose-100/80 p-2.5 rounded-lg border-2 border-[#3e2723] font-bold">
+                            🎁 通關獎勵：<span class="text-amber-800">🌰 350 橡實幣</span> + <span class="text-rose-600">🍮 焦糖布丁 x2</span>
+                        </div>
+                        <button onclick="startDungeon('alchemy')" class="w-full fluffy-btn bg-[#ff8fa3] hover:bg-rose-400 text-white font-black py-3 text-base">
+                            開始煮拉麵！嗚啦 🍲
+                        </button>
+                    </div>
+                </div>
+
+                <div class="amao-illust-card flex flex-col justify-between p-5">
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-[#f48c06] text-white border-2 border-[#3e2723] px-2.5 py-0.5 rounded-full text-xs font-bold">萬聖節特別篇</span>
+                            <span id="dg3-sub-tag" class="text-xs font-bold text-green-900 bg-green-100 px-2 py-0.5 rounded border border-green-400">小四英文：位置介系詞</span>
+                        </div>
+                        <div class="h-36 bg-[#fffdf7] rounded-xl border-3 border-[#3e2723] mb-4 flex items-center justify-center relative overflow-hidden">
+                            <div id="dungeon-preview-3" class="w-28 h-28 animate-amao"></div>
+                            <div class="absolute bottom-1.5 right-2.5 bg-[#3e2723] text-orange-300 px-2 py-0.5 rounded text-xs font-bold">🔍 英文尋寶躲貓貓</div>
+                        </div>
+                        <h3 class="text-xl font-black mb-2">【萬聖節糖果躲貓貓】</h3>
+                        <p class="text-sm text-gray-700 mb-4 leading-relaxed font-bold">
+                            萬聖節糖果被藏在房間各處了！根據英文線索 (in / on / under / next to)，幫南瓜阿毛找出糖果！
+                        </p>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-800 mb-3 bg-orange-100/80 p-2.5 rounded-lg border-2 border-[#3e2723] font-bold">
+                            🎁 通關獎勵：<span class="text-amber-800">🌰 300 橡實幣</span> + <span class="text-rose-600">🍮 焦糖布丁 x2</span>
+                        </div>
+                        <button onclick="startDungeon('english')" class="w-full fluffy-btn bg-[#f48c06] hover:bg-orange-500 text-white font-black py-3 text-base">
+                            出發找糖果！🔍
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- VIEW 3: UNIFIED SINGLE CARD PACK GACHA -->
+        <main id="view-packs" class="hidden flex-1 cozy-floor p-6 flex flex-col gap-5">
+            <div>
+                <h2 class="text-2xl font-black">✨ 【最初的 67】第一彈主題卡包抽卡機</h2>
+                <p class="text-sm text-gray-600 font-bold">總卡數規劃 67 張（UR:1 / SSR:3 / SR:10 / R:23 / N:30）！未登場卡位保留序號，隨題目與捷運出遊持續擴充！</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+                <div class="lg:col-span-5 flex flex-col gap-4">
+                    <div id="active-pack-stage" class="amao-illust-card p-6 flex-1 flex flex-col items-center justify-between text-center relative overflow-hidden">
+                        <div class="bg-[#3e2723] text-[#fdf0b6] px-4 py-1 rounded-full text-xs font-black border-2 border-[#f6bd60]">
+                            ✨ SERIES 01 : THE ORIGINAL 67
+                        </div>
+                        <div id="pack-foil-card" class="my-4 w-56 h-72 rounded-2xl border-4 border-[#3e2723] shadow-xl flex flex-col items-center justify-between p-4 transition-transform duration-300 bg-gradient-to-br from-rose-500 via-amber-400 to-indigo-600 text-white relative">
+                            <div class="w-full border-b-2 border-dashed border-white/80 pb-1 text-xs font-black tracking-widest">✂️ TEAR HERE 撕開卡包</div>
+                            <div id="pack-visual-icon" class="w-40 h-40 flex items-center justify-center"></div>
+                            <div class="bg-[#3e2723]/95 w-full py-1.5 px-2 rounded-xl border-2 border-[#fdf0b6]">
+                                <h3 class="font-black text-base text-[#fdf0b6]">✨ 最初的 67</h3>
+                                <p class="text-[11px] text-amber-200 font-bold">壓軸大獎：No.067 UR 迷因 67 阿毛</p>
+                            </div>
+                        </div>
+                        <p id="pack-desc-text" class="text-xs text-gray-700 font-bold max-w-sm mb-3">
+                            依據 1 / 3 / 10 / 23 / 30 張完美配比抽取！抽中該階級後，將從目前「已實裝登場」的阿毛卡牌中抽出！
+                        </p>
+                        <button onclick="pullSelectedPack()" class="w-full fluffy-btn bg-[#f6bd60] hover:bg-amber-300 text-[#3e2723] font-black py-3.5 text-lg flex items-center justify-center gap-2">
+                            <span>🌰 花費 150 橡實幣抽【最初的 67】！</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 fluffy-box p-5 bg-white flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between border-b-3 border-[#3e2723] pb-2 mb-3">
+                            <h3 class="text-lg font-black flex items-center gap-2">
+                                <i class="fa-solid fa-percent text-orange-500"></i> 【✨ 最初的 67】5 階配比與序號區間表
+                            </h3>
+                            <span class="text-xs bg-amber-100 border-2 border-[#3e2723] px-2.5 py-0.5 rounded-full font-black text-amber-900">總卡數規劃 = 67 張</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
+                            <div class="p-2 rounded-xl bg-gradient-to-br from-rose-200 via-amber-200 to-cyan-200 border-2 border-[#3e2723] text-center">
+                                <div class="text-[11px] font-black text-purple-950">👑 UR 傳說</div>
+                                <div class="text-base font-black text-[#3e2723]">1.5%</div>
+                                <div class="text-[10px] font-bold text-gray-800">1/67 張</div>
+                                <div class="text-[9px] font-mono font-bold text-purple-900">No.067</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-gradient-to-br from-yellow-100 to-amber-300 border-2 border-[#3e2723] text-center">
+                                <div class="text-[11px] font-black text-amber-950">🌟 SSR 超稀有</div>
+                                <div class="text-base font-black text-[#3e2723]">4.5%</div>
+                                <div class="text-[10px] font-bold text-gray-800">3/67 張</div>
+                                <div class="text-[9px] font-mono font-bold text-amber-900">064~066</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-gradient-to-br from-sky-100 to-pink-200 border-2 border-[#3e2723] text-center">
+                                <div class="text-[11px] font-black text-sky-950">✨ SR 特裝</div>
+                                <div class="text-base font-black text-[#3e2723]">14.9%</div>
+                                <div class="text-[10px] font-bold text-gray-800">10/67 張</div>
+                                <div class="text-[9px] font-mono font-bold text-sky-900">054~063</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-orange-100 border-2 border-[#3e2723] text-center">
+                                <div class="text-[11px] font-black text-orange-950">⚔️ R 副本Boss</div>
+                                <div class="text-base font-black text-[#3e2723]">34.3%</div>
+                                <div class="text-[10px] font-bold text-gray-800">23/67 張</div>
+                                <div class="text-[9px] font-mono font-bold text-orange-900">031~053</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-stone-100 border-2 border-[#3e2723] text-center col-span-2 sm:col-span-1">
+                                <div class="text-[11px] font-black text-stone-800">📘 N 題目人物</div>
+                                <div class="text-base font-black text-[#3e2723]">44.8%</div>
+                                <div class="text-[10px] font-bold text-gray-800">30/67 張</div>
+                                <div class="text-[9px] font-mono font-bold text-stone-700">001~030</div>
+                            </div>
+                        </div>
+
+                        <div id="pack-probability-list" class="space-y-2 max-h-[295px] overflow-y-auto pr-1"></div>
+                    </div>
+
+                    <div class="mt-3 bg-[#fefae0] border-2 border-[#3e2723] p-3 rounded-xl text-xs flex items-center gap-3">
+                        <span class="text-2xl">🍮</span>
+                        <div>
+                            <p class="font-black text-[#3e2723]">擴充預留機制 & 重複卡牌轉換</p>
+                            <p class="text-gray-700 font-bold">尚未設計的卡號已預留專屬序號；抽到重複卡牌會自動轉為 <b>「🍮 焦糖布丁 x2」</b>！</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- VIEW 4: HAND-DRAWN CARD DEX -->
+        <main id="view-decordex" class="hidden flex-1 cozy-floor p-6 flex flex-col gap-4">
+            <div class="flex flex-wrap justify-between items-center gap-2">
+                <div>
+                    <h2 class="text-2xl font-black">📖 【✨ 最初的 67】手繪阿毛圖鑑卡冊</h2>
+                    <p class="text-sm text-gray-600 font-bold">依序號區間 001~067 排列！可切換查看「目前已登場卡牌」或「預留擴充的 67 張完整卡位」！</p>
+                </div>
+                <div class="bg-[#3e2723] text-white px-4 py-2 rounded-xl border-2 border-white text-sm font-bold">
+                    已登場收集：<span id="dex-progress-text" class="text-[#f6bd60]">4 / 11 (全67張擴充中)</span>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 items-center justify-between">
+                <div class="flex flex-wrap gap-1.5">
+                    <button onclick="filterDex('ALL')" class="fluffy-btn bg-[#f6bd60] px-3 py-1.5 text-xs font-black">已登場卡牌 (11)</button>
+                    <button onclick="filterDex('UR')" class="fluffy-btn bg-gradient-to-r from-pink-200 via-amber-200 to-cyan-200 px-3 py-1.5 text-xs font-black">👑 UR (067)</button>
+                    <button onclick="filterDex('SSR')" class="fluffy-btn bg-amber-100 px-3 py-1.5 text-xs font-bold">🌟 SSR (064~066)</button>
+                    <button onclick="filterDex('SR')" class="fluffy-btn bg-sky-100 px-3 py-1.5 text-xs font-bold">✨ SR (054~063)</button>
+                    <button onclick="filterDex('R')" class="fluffy-btn bg-orange-100 px-3 py-1.5 text-xs font-bold">⚔️ R 副本Boss (031~053)</button>
+                    <button onclick="filterDex('N')" class="fluffy-btn bg-stone-200 px-3 py-1.5 text-xs font-bold">📘 N 題目人物 (001~030)</button>
+                </div>
+                <button onclick="toggleShowEmptySlots()" id="btn-toggle-slots" class="fluffy-btn bg-white text-[#3e2723] px-3 py-1.5 text-xs font-black">
+                    🔍 顯示全部 67 個預留卡位：關
+                </button>
+            </div>
+
+            <div id="decordex-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 flex-1"></div>
+        </main>
+
+        <!-- VIEW 5: ACTIVE DUNGEON 1 (ANGLES) -->
+        <main id="view-dungeon-angles" class="hidden flex-1 bg-[#2c221e] text-white p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-center border-b-2 border-amber-700 pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="bg-[#f6bd60] text-[#3e2723] font-black px-3 py-1 text-xs rounded-full">STAGE <span id="angle-stage-num">1</span>/3</span>
+                    <h2 class="text-xl font-black text-[#f6bd60]">⚡ 阿毛的雷射除草機 (<span class="grade-badge-inline">小四</span>)</h2>
+                </div>
+                <button onclick="switchTab('center')" class="fluffy-btn bg-gray-600 text-white px-3 py-1 text-xs font-bold">返回房間</button>
+            </div>
+
+            <div class="my-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center flex-1">
+                <div class="lg:col-span-8 bg-[#1e1613] border-4 border-[#f6bd60] rounded-2xl p-4 flex flex-col items-center justify-center relative">
+                    <p class="text-xs text-amber-200 mb-2 font-bold">🎯 調整滑桿轉動阿毛的除草雷射，對準搗蛋毒蘑菇所在的角度刻度！</p>
+                    <svg id="angle-svg" viewBox="0 0 400 230" class="w-full max-w-[520px] overflow-visible">
+                        <path d="M 40 200 A 160 160 0 0 1 360 200" fill="rgba(255, 203, 105, 0.12)" stroke="#f6bd60" stroke-width="2" stroke-dasharray="4 2"/>
+                        <path d="M 90 200 A 110 110 0 0 1 290 200" fill="none" stroke="#f6bd60" stroke-width="1" opacity="0.4"/>
+                        <line x1="20" y1="200" x2="380" y2="200" stroke="#f6bd60" stroke-width="2"/>
+                        <g id="protractor-ticks"></g>
+                        <g id="angle-target-group" transform="translate(200, 40)">
+                            <circle cx="0" cy="0" r="22" fill="rgba(255, 117, 24, 0.3)" stroke="#ff7518" stroke-width="2" stroke-dasharray="3 3"/>
+                            <text x="0" y="8" font-size="28" text-anchor="middle">🍄</text>
+                        </g>
+                        <line id="laser-beam" x1="200" y1="200" x2="360" y2="200" stroke="#ff8fa3" stroke-width="6" stroke-linecap="round"/>
+                        <circle cx="200" cy="200" r="18" fill="#fff3b0" stroke="#3e2723" stroke-width="3"/>
+                        <text x="200" y="208" font-size="26" text-anchor="middle">🐰</text>
+                    </svg>
+                </div>
+
+                <div class="lg:col-span-4 fluffy-box-dark p-5 flex flex-col justify-between h-full">
+                    <div>
+                        <div class="bg-[#2a1f1a] border-2 border-[#f6bd60] p-3.5 rounded-xl mb-4">
+                            <p class="text-xs text-amber-200">📡 除草雷達偵測：</p>
+                            <p id="angle-mission-prompt" class="text-base font-bold text-white mt-1"></p>
+                            <p id="angle-type-hint" class="text-xs text-pink-300 mt-1"></p>
+                        </div>
+                        <div class="mb-6">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span>目前除草雷射角度：</span>
+                                <span id="current-angle-display" class="text-[#f6bd60] font-bold text-xl">0°</span>
+                            </div>
+                            <input type="range" id="angle-slider" min="0" max="180" step="5" value="0" oninput="updateLaserAngle(this.value)" class="w-full">
+                            <div class="flex justify-between text-xs text-gray-400 mt-2">
+                                <span>0° (右)</span>
+                                <span>90° (直角)</span>
+                                <span>180° (左)</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mb-4">
+                            <button onclick="adjustAngle(-15)" class="fluffy-btn bg-stone-700 text-white text-xs py-1.5 flex-1">-15°</button>
+                            <button onclick="adjustAngle(-5)" class="fluffy-btn bg-stone-700 text-white text-xs py-1.5 flex-1">-5°</button>
+                            <button onclick="adjustAngle(5)" class="fluffy-btn bg-stone-700 text-white text-xs py-1.5 flex-1">+5°</button>
+                            <button onclick="adjustAngle(15)" class="fluffy-btn bg-stone-700 text-white text-xs py-1.5 flex-1">+15°</button>
+                        </div>
+                    </div>
+                    <div>
+                        <p id="angle-feedback" class="text-center text-sm font-bold text-green-300 mb-3 min-h-[24px]"></p>
+                        <button onclick="fireLaser()" class="w-full fluffy-btn bg-[#f6bd60] text-[#3e2723] font-black py-3 text-lg">
+                            ⚡ 發射除草光束！Yaha！
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- VIEW 6: ACTIVE DUNGEON 2 (RAMEN ALCHEMY) -->
+        <main id="view-dungeon-alchemy" class="hidden flex-1 bg-[#2c1d27] text-white p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-center border-b-2 border-pink-700 pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="bg-[#ff8fa3] text-white font-bold px-3 py-1 text-xs rounded-full">STAGE <span id="alchemy-stage-num">1</span>/3</span>
+                    <h2 class="text-xl font-black text-pink-200">🍲 阿毛的暴走拉麵大釜 (<span class="grade-badge-inline">小四</span>)</h2>
+                </div>
+                <button onclick="switchTab('center')" class="fluffy-btn bg-gray-600 text-white px-3 py-1 text-xs font-bold">返回房間</button>
+            </div>
+
+            <div class="my-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center flex-1">
+                <div class="lg:col-span-6 bg-[#1d1118] border-4 border-[#ff8fa3] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+                    <div class="flex items-center gap-4 mb-3">
+                        <div class="text-6xl animate-amao">🐰🍜</div>
+                        <div class="text-left">
+                            <span class="bg-[#f6bd60] text-[#3e2723] text-xs font-bold px-2 py-0.5 rounded-full">大胃王阿毛</span>
+                            <h3 class="text-lg font-bold mt-1">目標拉麵配料總重：</h3>
+                            <p class="text-4xl font-black text-[#f6bd60]"><span id="alchemy-target">400</span> <span class="text-base">克(g)</span></p>
+                        </div>
+                    </div>
+                    <div class="w-full bg-gray-800 border-2 border-white h-8 rounded-xl overflow-hidden relative my-3">
+                        <div id="alchemy-bar" class="bg-gradient-to-r from-pink-400 to-amber-400 h-full transition-all duration-300" style="width: 0%"></div>
+                        <span id="alchemy-current-text" class="absolute inset-0 flex items-center justify-center text-sm font-bold text-white drop-shadow">目前大釜內：0 / 400 g</span>
+                    </div>
+                    <p id="alchemy-formula-log" class="text-xs text-pink-200 bg-pink-950/80 px-3 py-2.5 rounded-xl w-full border border-pink-500 min-h-[38px]"></p>
+                </div>
+
+                <div class="lg:col-span-6 fluffy-box-dark p-5 flex flex-col justify-between h-full">
+                    <div>
+                        <h3 class="text-sm font-bold text-[#f6bd60] mb-2">步驟 1：選擇一項「拉麵配料」(被乘數)</h3>
+                        <div class="grid grid-cols-3 gap-3 mb-5">
+                            <button onclick="selectBerry(25)" id="berry-25" class="fluffy-btn bg-pink-900 border-2 border-[#f6bd60] text-white p-3 text-center">
+                                <div class="text-2xl">🍥</div>
+                                <div class="font-bold text-base">25 g</div>
+                                <div class="text-xs text-gray-300">鳴門魚板</div>
+                            </button>
+                            <button onclick="selectBerry(40)" id="berry-40" class="fluffy-btn bg-stone-800 text-white p-3 text-center">
+                                <div class="text-2xl">🥩</div>
+                                <div class="font-bold text-base">40 g</div>
+                                <div class="text-xs text-gray-300">厚切叉燒</div>
+                            </button>
+                            <button onclick="selectBerry(15)" id="berry-15" class="fluffy-btn bg-stone-800 text-white p-3 text-center">
+                                <div class="text-2xl">🥚</div>
+                                <div class="font-bold text-base">15 g</div>
+                                <div class="text-xs text-gray-300">黃金溏心蛋</div>
+                            </button>
+                        </div>
+                        <h3 class="text-sm font-bold text-green-300 mb-2">步驟 2：點擊「倍增夾夾樂」投入鍋中！(乘數)</h3>
+                        <div class="grid grid-cols-4 gap-2 mb-4">
+                            <button onclick="applyMultiplier(1)" class="fluffy-btn bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 text-base">× 1</button>
+                            <button onclick="applyMultiplier(4)" class="fluffy-btn bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 text-base">× 4</button>
+                            <button onclick="applyMultiplier(6)" class="fluffy-btn bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 text-base">× 6</button>
+                            <button onclick="applyMultiplier(10)" class="fluffy-btn bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 text-base">× 10</button>
+                        </div>
+                        <p id="alchemy-feedback" class="text-xs text-amber-300 font-bold mb-2 min-h-[20px] text-center"></p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="resetAlchemyPot()" class="fluffy-btn bg-stone-600 text-white font-bold py-3 px-4 text-sm">🗑️ 倒掉重煮</button>
+                        <button onclick="submitAlchemyPot()" class="flex-1 fluffy-btn bg-[#f6bd60] text-[#3e2723] font-black py-3 text-lg">✨ 上菜給阿毛吃！</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- VIEW 7: ACTIVE DUNGEON 3 (HALLOWEEN ENGLISH) -->
+        <main id="view-dungeon-english" class="hidden flex-1 bg-[#231934] text-white p-6 flex flex-col justify-between">
+            <div class="flex justify-between items-center border-b-2 border-orange-600 pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="bg-[#f48c06] text-white font-bold px-3 py-1 text-xs rounded-full">STAGE <span id="eng-stage-num">1</span>/3</span>
+                    <h2 class="text-xl font-black text-orange-300">🎃 萬聖節糖果躲貓貓 (<span class="grade-badge-inline">小四</span>)</h2>
+                </div>
+                <button onclick="switchTab('center')" class="fluffy-btn bg-gray-600 text-white px-3 py-1 text-xs font-bold">返回房間</button>
+            </div>
+            <div class="my-4 flex-1 flex flex-col items-center justify-center">
+                <div class="fluffy-box bg-white text-[#3e2723] p-4 max-w-2xl w-full text-center mb-6">
+                    <p class="text-xs text-orange-600 font-bold mb-1">📜 萬聖南瓜阿毛的英文提示：</p>
+                    <p id="eng-clue-sentence" class="text-2xl font-black text-[#1d3557]"></p>
+                </div>
+                <div id="eng-spots-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full"></div>
+                <p id="eng-feedback" class="mt-4 text-[#f6bd60] font-bold text-lg min-h-[28px]"></p>
+            </div>
+        </main>
+    </div>
+
+    <!-- MOBILE & TABLET FIXED BOTTOM TAB BAR -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#3e2723] border-t-4 border-[#f6bd60] px-2 py-1.5 grid grid-cols-4 gap-1.5 shadow-2xl">
+        <button onclick="switchTab('center')" id="mob-tab-center" class="fluffy-btn bg-[#f6bd60] text-[#3e2723] font-black py-1.5 flex flex-col items-center justify-center text-[11px]">
+            <i class="fa-solid fa-house-chimney text-sm"></i>
+            <span class="mt-0.5">阿毛房間</span>
+        </button>
+        <button onclick="switchTab('dungeons')" id="mob-tab-dungeons" class="fluffy-btn bg-[#fffdf5] text-[#3e2723] font-bold py-1.5 flex flex-col items-center justify-center text-[11px]">
+            <i class="fa-solid fa-compass text-red-500 text-sm"></i>
+            <span class="mt-0.5">討伐副本</span>
+        </button>
+        <button onclick="switchTab('packs')" id="mob-tab-packs" class="fluffy-btn bg-[#fffdf5] text-[#3e2723] font-bold py-1.5 flex flex-col items-center justify-center text-[11px]">
+            <i class="fa-solid fa-box-open text-orange-500 text-sm"></i>
+            <span class="mt-0.5">抽卡包</span>
+        </button>
+        <button onclick="switchTab('decordex')" id="mob-tab-decordex" class="fluffy-btn bg-[#fffdf5] text-[#3e2723] font-bold py-1.5 flex flex-col items-center justify-center text-[11px]">
+            <i class="fa-solid fa-swatchbook text-amber-600 text-sm"></i>
+            <span class="mt-0.5">圖鑑卡冊</span>
+        </button>
+    </nav>
+
+    <!-- MODALS -->
+    <div id="profile-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="fluffy-box max-w-lg w-full p-6 text-center bg-[#fbf5e6]">
+            <div class="text-4xl mb-1">🐰✨</div>
+            <h3 class="text-2xl font-black text-[#3e2723]">請問今天是哪位小主人要玩？</h3>
+            <p class="text-xs font-bold text-gray-600 mt-1">兩位小主人的橡實幣、手繪阿毛圖鑑與學習題庫是完全分開存檔的喔！</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-5 text-left">
+                <div onclick="selectProfile('p1')" class="amao-illust-card p-4 cursor-pointer hover:scale-[1.02] transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-3xl">👦</span>
+                            <span class="bg-[#1d3557] text-white text-xs font-black px-2.5 py-0.5 rounded-full">小學 6 年級</span>
+                        </div>
+                        <h4 id="prof-name-p1" class="text-lg font-black text-[#3e2723]">小六探險家</h4>
+                        <p class="text-xs text-gray-600 font-bold mt-1">專屬題庫：小六補角推理、高階四則分配律、小六進階英文對話</p>
+                    </div>
+                    <div class="mt-3 pt-2 border-t-2 border-dashed border-[#3e2723]/30 flex justify-between text-xs font-black text-amber-900">
+                        <span id="prof-coins-p1">🌰 650</span>
+                        <span id="prof-dex-p1">📖 4/67 張</span>
+                    </div>
+                </div>
+                <div onclick="selectProfile('p2')" class="amao-illust-card p-4 cursor-pointer hover:scale-[1.02] transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-3xl">👧</span>
+                            <span class="bg-[#e11d48] text-white text-xs font-black px-2.5 py-0.5 rounded-full">小學 4 年級</span>
+                        </div>
+                        <h4 id="prof-name-p2" class="text-lg font-black text-[#3e2723]">小四探險家</h4>
+                        <p class="text-xs text-gray-600 font-bold mt-1">專屬題庫：小四量角器、乘除分配律、日常方位英文介系詞</p>
+                    </div>
+                    <div class="mt-3 pt-2 border-t-2 border-dashed border-[#3e2723]/30 flex justify-between text-xs font-black text-amber-900">
+                        <span id="prof-coins-p2">🌰 650</span>
+                        <span id="prof-dex-p2">📖 4/67 張</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="closeModal('profile-modal')" class="fluffy-btn bg-[#f6bd60] text-[#3e2723] font-black px-6 py-2 text-xs">繼續以目前小主人遊玩</button>
+        </div>
+    </div>
+
+    <div id="transfer-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="fluffy-box max-w-lg w-full p-6 bg-white">
+            <div class="flex justify-between items-center border-b-2 border-[#3e2723] pb-2 mb-4">
+                <h3 class="text-xl font-black flex items-center gap-2">
+                    💾 跨裝置引繼碼 (平板 ⇄ 筆電)
+                    <span id="transfer-player-tag" class="bg-[#f6bd60] text-xs px-2.5 py-0.5 rounded-full border border-[#3e2723]"></span>
+                </h3>
+                <button onclick="closeModal('transfer-modal')" class="text-gray-500 hover:text-black font-bold text-lg">✕</button>
+            </div>
+            <div class="space-y-4 text-xs">
+                <div class="p-3.5 rounded-xl bg-sky-50 border-2 border-[#3e2723]">
+                    <p class="font-black text-sm text-[#1d3557] mb-1">📤 步驟 1：把這台裝置的進度帶走</p>
+                    <div class="flex gap-2 mt-2">
+                        <input id="transfer-code-out" type="text" readonly class="flex-1 font-mono font-black text-sm bg-white border-2 border-[#3e2723] rounded-lg px-3 py-2 text-center text-rose-700" />
+                        <button onclick="copyTransferCode()" class="fluffy-btn bg-[#f6bd60] text-[#3e2723] font-black px-4 py-2 shrink-0">複製引繼碼</button>
+                    </div>
+                    <p id="transfer-copy-msg" class="text-green-700 font-black mt-1.5 hidden">✓ 已複製到剪貼簿！</p>
+                </div>
+                <div class="p-3.5 rounded-xl bg-amber-50 border-2 border-[#3e2723]">
+                    <p class="font-black text-sm text-[#3e2723] mb-1">📥 步驟 2：在另一台裝置輸入引繼碼還原</p>
+                    <div class="flex gap-2 mt-2">
+                        <input id="transfer-code-in" type="text" placeholder="例如：AMAO-P2-650-5-3-1-0,1,3,10" class="flex-1 font-mono font-black text-sm bg-white border-2 border-[#3e2723] rounded-lg px-3 py-2 uppercase" />
+                        <button onclick="applyTransferCode()" class="fluffy-btn bg-[#80ed99] text-[#3e2723] font-black px-4 py-2 shrink-0">立即還原</button>
+                    </div>
+                    <p id="transfer-status-msg" class="font-black mt-1.5 text-rose-600"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="checkin-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="fluffy-box max-w-md w-full p-6 text-center bg-[#fbf5e6]">
+            <div class="text-4xl mb-1">📅</div>
+            <h3 class="text-xl font-black">阿毛每日連續簽到印章卡</h3>
+            <p id="checkin-today-str" class="text-xs font-bold text-amber-800 mt-1"></p>
+            <div class="my-4 p-4 rounded-xl bg-white border-3 border-[#3e2723]">
+                <div class="text-sm font-black text-[#3e2723] mb-2">
+                    🔥 目前已連續簽到：<span id="checkin-streak-num" class="text-xl text-rose-600">1</span> 天
+                </div>
+                <div id="checkin-stamps-grid" class="grid grid-cols-7 gap-1.5"></div>
+                <p class="text-[11px] font-bold text-gray-500 mt-2.5">每天蓋章可獲得 <b>🌰 +100 橡實幣 & 🍮 +1 焦糖布丁</b>！</p>
+            </div>
+            <button id="btn-claim-checkin" onclick="claimDailyCheckIn()" class="w-full fluffy-btn bg-[#80ed99] hover:bg-[#57cc99] text-[#3e2723] font-black py-3 text-base mb-2">
+                💮 蓋下今日阿毛印章 (+100🌰 +1🍮)
+            </button>
+            <button onclick="closeModal('checkin-modal')" class="text-xs font-bold text-gray-500 underline">關閉視窗</button>
+        </div>
+    </div>
+
+    <div id="pack-reveal-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="fluffy-box max-w-sm w-full p-5 text-center bg-[#fbf5e6] relative">
+            <div id="reveal-series-tag" class="text-xs text-orange-700 font-black mb-2"></div>
+            <div id="reveal-card-container" class="mb-3"></div>
+            <p id="reveal-desc" class="text-xs text-gray-700 font-bold mb-2 px-2"></p>
+            <p id="reveal-duplicate-notice" class="text-xs font-black text-rose-600 mb-3"></p>
+            <div class="flex gap-3">
+                <button onclick="equipFromModal()" class="flex-1 fluffy-btn bg-[#ff8fa3] text-white font-black py-2.5 text-sm">🐰 立即換上此卡牌！</button>
+                <button onclick="closeModal('pack-reveal-modal')" class="flex-1 fluffy-btn bg-[#f6bd60] text-[#3e2723] font-black py-2.5 text-sm">收進卡冊繼續抽</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="victory-modal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+        <div class="fluffy-box max-w-md w-full p-6 text-center bg-white">
+            <div class="inline-block bg-[#f6bd60] border-2 border-[#3e2723] px-4 py-1 rounded-full font-black text-base mb-2">🏆 討伐大成功！(Yaha!～)</div>
+            <h3 id="victory-title" class="text-2xl font-black mb-2"></h3>
+            <p id="victory-desc" class="text-sm text-gray-600 font-bold mb-4"></p>
+            <div class="bg-[#fefae0] border-2 border-[#3e2723] p-4 rounded-xl mb-5 space-y-2">
+                <div class="flex justify-between font-bold">
+                    <span>🌰 獲得橡實幣：</span>
+                    <span id="victory-coins" class="text-amber-700 font-black">+300</span>
+                </div>
+                <div class="flex justify-between font-bold">
+                    <span>🍮 獲得焦糖布丁：</span>
+                    <span id="victory-puddings" class="text-rose-600 font-black">+2</span>
+                </div>
+            </div>
+            <button onclick="closeVictoryModal()" class="w-full fluffy-btn bg-[#f48c06] text-white font-black py-3 text-base">帶著橡實幣去抽卡包 ▶</button>
+        </div>
+    </div>
+
+    <div id="parent-modal" class="hidden fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+        <div class="fluffy-box max-w-lg w-full p-6 bg-white max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b-2 border-[#3e2723] pb-2 mb-4">
+                <h3 class="text-xl font-black">📊 家長控制台：雙人學習雷達與生日設定</h3>
+                <button onclick="closeModal('parent-modal')" class="text-gray-500 hover:text-black font-bold text-lg">✕</button>
+            </div>
+            <div class="p-3.5 bg-pink-50 border-2 border-[#3e2723] rounded-xl mb-4 text-xs space-y-2">
+                <div class="font-black text-sm text-rose-900">🎂 小主人暱稱與生日驚喜設定（目前選擇：<span id="parent-cur-prof-label"></span>）</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="font-bold text-gray-600">小主人暱稱：</label>
+                        <input id="input-prof-name" type="text" class="w-full border-2 border-[#3e2723] rounded-lg px-2 py-1 font-black mt-0.5" />
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-600">生日 (MM-DD)：</label>
+                        <input id="input-prof-bday" type="text" placeholder="10-25" class="w-full border-2 border-[#3e2723] rounded-lg px-2 py-1 font-mono font-black mt-0.5" />
+                    </div>
+                </div>
+                <div class="flex gap-2 pt-1">
+                    <button onclick="saveProfileCustom()" class="fluffy-btn bg-[#ff8fa3] text-white font-black px-3 py-1.5 flex-1">💾 儲存暱稱與生日</button>
+                    <button onclick="triggerBirthdayTest()" class="fluffy-btn bg-[#f6bd60] text-[#3e2723] font-black px-3 py-1.5 flex-1">🎉 模擬今日壽星驚喜！</button>
+                </div>
+            </div>
+            <div class="space-y-2.5 mb-5 text-xs" id="parent-dual-stats"></div>
+            <button onclick="closeModal('parent-modal')" class="w-full fluffy-btn bg-[#3e2723] text-white font-bold py-2.5">關閉視窗</button>
+        </div>
+    </div>
+
+    <!-- 依序載入拆分後的 4 個獨立模組 JS 檔 (支援直接點兩下 index.html 執行與 GitHub Pages 部署) -->
+    <script src="js/data-dex.js"></script>
+    <script src="js/data-questions.js"></script>
+    <script src="js/amao-svg.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
